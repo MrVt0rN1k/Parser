@@ -1,20 +1,22 @@
 #!/usr/bin/perl 
+#my $script_path = "/opt/scripts/mr_231";
+#my $conf_file = "$script_path/mr_231.conf";
 use strict;
 use threads;
 use IO::File;
 use IO::Socket::INET;
 my $new_message;
 
-#distanation NEP
-my $nep_ip = "127.0.0.1";
-my $nep_port = "1111";
-my $nep_ident = pack("H*", 'asdja12315415ajdalnasd');
-my $nep_socket;
+#distanation Hydra(BIP)
+my $bip_ip = "127.0.0.1";
+my $bip_port = "5559";
+my $bip_ident = pack("H*", 'aced000575720000025b42acf317f8060854e00200007870');
+my $bip_socket;
 
 #shift counter
 my $counter = 0;
 my @data = ('responceTime', 'situation', 'id', 'targetNum', 'fixedNum', 'channelId', 'channel', 'rtp', 'radarType', 'radarNum', 'lat', 'lon', 'course', 'speed', 'typeCode', 'type', 'modeCode', 'mode', 'statusCode', 'status', 'msgTime', 'radarTime', 'targetKind', 'removedTargets');
-my @values = ('1670944949831', '', '566097', '2', '21', '1', '127.0.0.1:8180', 'New-London', 'NEP-235', '1', '54.644444444444446', '19.904722222222222', '337.9', '0.1', '0', 'одиночная', '1', 'автосопровождение', '2', 'изменена', '1670944844181', '1670944826000', '0', '[]');
+my @values = ('1670944949831', '', '566097', '2', '21', '1', '127.0.0.1:8180', 'Щукинское', 'МР-231', '1', '54.644444444444446', '19.904722222222222', '337.9', '0.1', '0', 'одиночная', '1', 'автосопровождение', '2', 'изменена', '1670944844181', '1670944826000', '0', '[]');
 my $len_data = scalar @data;
 my @array;
 #starting point to start string parsing
@@ -51,36 +53,36 @@ sub count_sumbol {
     $point_start = 7;
 }
 
-sub send_to_nep {
+sub send_to_bip {
     my ($data) = @_;
 
 # print $data."\n";
 
     #Data preparation
     my $data_size = length($data);
-    my $head = pack("N",($data_size+28))."$nep_ident".pack("N",($data_size));
+    my $head = pack("N",($data_size+28))."$bip_ident".pack("N",($data_size));
     $data = $head.$data;
 
 
     #Open distanation socket
-    open_nep_socket();
+    open_bip_socket();
 
     #Send data
     eval {
         print $data."\n";
-        print $nep_socket $data;
+        print $bip_socket $data;
     };
 
     #Close socket
     eval {
-        $nep_socket->close();
+        $bip_socket->close();
     };
 }
 
-sub open_nep_socket {
+sub open_bip_socket {
     eval {
-            $nep_socket = new IO::Socket::INET (PeerHost => $nep_ip, 
-                                                PeerPort => $nep_port, 
+            $bip_socket = new IO::Socket::INET (PeerHost => $bip_ip, 
+                                                PeerPort => $bip_port, 
                                                 Proto => 'tcp') 
             or return 0;
     };
@@ -131,19 +133,19 @@ while (1) {
             }
             $json .=  qq[}].qq[\]].",";
             $json .=  qq["].$data[0].qq["].":".time()."000,".qq["].$data[23].qq["].":".$values[23].qq[}],"\n";
-            send_to_nep($json);
+            send_to_bip($json);
         }
         #message type is VHW
         elsif(substr($new_message, 3, 3) eq "VHW"){
-            print "Dected VHW\n";
-            parsing data
-            count_sumbol();
+            #print "Dected VHW\n";
+            #parsing data
+            #count_sumbol();
         }
         #message type is RSD
         elsif(substr($new_message, 3, 3) eq "RSD"){
-            print "Dected RSD\n";
-            parsing data
-            count_sumbol();
+            #print "Dected RSD\n";
+            #parsing data
+            #count_sumbol();
         }
         #message type is Unnow
         else{
